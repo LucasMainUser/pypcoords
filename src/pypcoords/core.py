@@ -142,7 +142,8 @@ ColumnValues:   TypeAlias = Sequence[Any]
 RowValues:      TypeAlias = Sequence[Any]
 
 
-
+def type_name(it: Any, /) -> str:
+    return getattr(type(it), '__name__', 'unnamed_type')
 
 def move_to_end(data: list[Any], value: Any, /) -> list[Any]:
     data.remove(value)
@@ -302,9 +303,13 @@ def cubic_bezier_path(x: npt.ArrayLike, y: npt.ArrayLike, /) -> tuple[Vertices, 
 
     return vertices, codes
 
-def resolve_axes(ax: plt.Axes | None, /) -> plt.Axes:
+def resolve_axes(ax: Optional[plt.Axes | None]=None, /) -> plt.Axes:
     if ax is None:
-        return plt.gca()
+        ax = plt.gca()
+    if not isinstance(ax, plt.Axes):
+        raise ValueError(
+            f'Expected object of type plt.Axes, instead got {type_name(ax)}.'
+        )
     return ax
 
 def transform_rgba(data: str | RGB | RGBA, /, alpha: Optional[float]=None) -> RGBA:
