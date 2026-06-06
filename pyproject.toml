@@ -10,7 +10,7 @@ authors = [
     { name = "Lucas Detogni" }
 ]
 
-license = { file = "LICENSE" }
+license = "MIT"
 license-files = ["LICENSE"]
 
 readme = "README.md"
@@ -23,7 +23,6 @@ keywords = ["visualization", "matplotlib", "parallel coordinates", "plot"]
 
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 
