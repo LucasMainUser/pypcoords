@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pypcoords"
-version = "1.0.1"
+version = "1.0.2"
 description = "Flexible parallel coordinates plot with support for NumPy, pandas, and polars."
 authors = [
     { name = "Lucas Detogni" }
