@@ -143,7 +143,7 @@ RowValues:      TypeAlias = Sequence[Any]
 
 
 def type_name(it: Any, /) -> str:
-    return getattr(type(it), '__name__', 'unnamed_type')
+    return getattr(type(it), '__name__')
 
 def move_to_end(data: list[Any], value: Any, /) -> list[Any]:
     data.remove(value)
@@ -240,8 +240,6 @@ def map_reescalers(mapping: ColumnsMapping, /, lower: float, upper: float) -> di
         for column, values in mapping.items()
     }
 
-
-
 def map_parallel_axes(
         columns: Iterable[ColumnName], 
         /,   
@@ -266,7 +264,22 @@ def map_parallel_axes(
 
     parallel_axes = [ax] + [ ax.twinx() for _ in range(total - 2) ] + [colorbar.ax]
     return dict_from_lists(columns, parallel_axes)
-    
+
+def map_column_labels(columns: Iterable[ColumnName], labels: Optional[Iterable[str] | Mapping[ColumnName, str]]=None, /) -> dict[ColumnName, str]:
+    columns = list(columns)
+
+    if labels is None:
+        return dict_from_lists(columns, columns)
+
+    if isinstance(labels, Mapping):
+        missing = set(columns).difference(labels.keys() )
+        if missing:
+            missing = sorted(missing)
+            raise ValueError(f'Missing labels for columns: {missing}')
+        return dict(labels)
+        
+    return dict_from_lists(columns, labels)
+
 def cubic_bezier_path(x: npt.ArrayLike, y: npt.ArrayLike, /) -> tuple[Vertices, Codes]:
     x_array = vector(x)
     y_array = vector(y)
@@ -307,8 +320,8 @@ def resolve_axes(ax: Optional[plt.Axes | None]=None, /) -> plt.Axes:
     if ax is None:
         ax = plt.gca()
     if not isinstance(ax, plt.Axes):
-        raise ValueError(
-            f'Expected object of type plt.Axes, instead got {type_name(ax)}.'
+        raise TypeError(
+            f'Invalid type for <ax>. Expected matplotlib.axes.Axes, got {type_name(ax)} instead.'
         )
     return ax
 
@@ -373,7 +386,7 @@ def resolve_color_system(
 def parallel_plot(
         data: Mapping[ColumnName, npt.ArrayLike] | DataframeLike | npt.ArrayLike, 
         columns: Iterable[ColumnName] | None=None,
-        column_labels: Iterable[str] | None=None,
+        column_labels: Iterable[str] | Mapping[ColumnName, str] | None=None,
         color_column: Optional[ColumnName]=None,
         palette: Optional[ColorLike | Mapping[Category, ColorLike] | Colormap]=None,
         colormap_gradient: Optional[int]=None,
@@ -402,8 +415,11 @@ def parallel_plot(
     columns : iterable, optional
         Columns to include. Defaults to all.
 
-    column_labels : iterable of str, optional
-        Labels for the x-axis. Defaults to column names.
+    column_labels : iterable of str or mapping, optional
+        Labels for the x-axis.
+        - If iterable: must match order of `columns`
+        - If mapping: {column_name: label}
+        - If None, column names are used.
 
     color_column : column name, optional
         Column used for coloring lines. Defaults to last column.
@@ -497,13 +513,8 @@ def parallel_plot(
         raise ValueError(f'color_column ({color_column!r}) not in {columns!r}')
     
     # NOTE: Resolve x-labels
-    if column_labels is None:
-        column_labels = columns
-    column_labels = list(column_labels)
-    assert_same_lengths(columns, column_labels)
+    labels = map_column_labels(columns, column_labels)
     
-    labels = dict_from_lists(columns, column_labels)
-
     # NOTE: Transform data into a columnar mapping
     # Assert all arrays have same length
     series = map_columns(data, columns)
