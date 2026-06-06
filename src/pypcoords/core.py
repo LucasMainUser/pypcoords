@@ -379,7 +379,87 @@ def parallel_plot(
         ax: Optional[plt.Axes]=None,
         show_colorbar: bool=True
     ) -> plt.Axes:
+    '''
+    Create a parallel coordinates plot from tabular data.
+
+    Each row is drawn as a smooth curve across vertical axes (one per column).
+    All columns are scaled to [0, 1] so different types and ranges can be compared.
+
+    Parameters
+    ----------
+    data : Mapping, DataFrame-like, or 2D array
+        Input data. Supported formats:
+        - dict-like: {column_name: 1D array}
+        - DataFrame: pandas, polars, etc.
+        - 2D array: shape (n_rows, n_columns)
+        All columns must have the same length.
+
+    columns : iterable, optional
+        Columns to include. Defaults to all.
+
+    column_labels : iterable of str, optional
+        Labels for the x-axis. Defaults to column names.
+
+    color_column : column name, optional
+        Column used for coloring lines. Defaults to last column.
+
+    palette : color, mapping, colormap-name or colormap, optional
+        - colormap → continuous colors
+        - dict → category → color
+        - single color → all lines same color
+
+    colormap_gradient : int, optional
+        Number of color steps used in the gradient (must be > 0).
+
+        Higher values → smoother, more continuous color transitions.  
+        Lower values → fewer colors, more visible steps (banded look).
+
+    linewidth : float, optional
+        Line width (default 1.0).
+
+    alpha : float, optional
+        Line transparency (default 0.7).
+
+    highlight_rows : dict, optional
+        Custom styles for specific rows: {row_index: style_dict}.
+
+    decimals : dict, optional
+        Decimal formatting per column.
+
+    ax : matplotlib.axes.Axes, optional
+        Axes to draw on. Creates one if None.
+
+    show_colorbar : bool, default True
+        Show colorbar for the color column.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
     
+    Raises
+    ------
+    ValueError
+        - Fewer than 2 columns → need at least two axes.
+        - `color_column` not in `columns` → invalid color reference.
+        - Columns have different lengths → inconsistent row count.
+        - Invalid tabular input → unsupported format or shape mismatch.
+        - Incomplete categorical `palette` → missing category colors.
+        - `columns` and `column_labels` size mismatch → labels must align.
+        - No valid values after processing → cannot scale or plot.
+
+    Notes
+    -----
+    - Columns are scaled independently to [0, 1]
+    - Categorical data is encoded automatically
+    - Curves are cubic Bézier
+    - Color axis moves to the end if colorbar is shown
+
+    Examples
+    --------
+    >>> parallel_plot(df)
+
+    >>> parallel_plot(df, color_column="C", alpha=0.5)
+    '''
     if alpha is None:
         alpha = 0.7
 
